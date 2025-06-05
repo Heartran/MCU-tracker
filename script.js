@@ -1,10 +1,11 @@
 async function loadMCUData() {
 
-  const res = await fetch('./data/mcu.json');
-  const data = await res.json();
+  // Fetch movies from the public MCU API
+  const res = await fetch('https://mcuapi.up.railway.app/api/v1/movies');
+  const apiData = await res.json();
 
-  // Sort movies by release date
-  const movies = data.sort((a, b) => new Date(a.release_date) - new Date(b.release_date));
+  // Extract and sort movies by release date
+  const movies = apiData.data.sort((a, b) => new Date(a.release_date) - new Date(b.release_date));
 
   const watched = JSON.parse(localStorage.getItem('watchedMCU')) || [];
   const container = document.getElementById('app');
@@ -26,12 +27,12 @@ async function loadMCUData() {
     const title = document.createElement('strong');
     title.textContent = `${movie.title} (${movie.release_date})`;
 
-    const deps = document.createElement('p');
-    const list = movie.dependencies && movie.dependencies.length ? movie.dependencies.join(', ') : 'Nessuna';
-    deps.innerHTML = `<em>Dipendenze:</em> ${list}`;
+    const phaseInfo = document.createElement('p');
+    phaseInfo.textContent = `Fase: ${movie.phase}`;
+
     div.appendChild(checkbox);
     div.appendChild(title);
-    div.appendChild(deps);
+    div.appendChild(phaseInfo);
     container.appendChild(div);
   });
 }
