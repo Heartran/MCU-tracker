@@ -1,7 +1,6 @@
 let dependencies = {};
 let allMovies = [];
 let movieMap = {};
-
 async function loadMCU() {
   const res = await fetch('https://mcuapi.up.railway.app/api/v1/movies');
   const data = await res.json();
