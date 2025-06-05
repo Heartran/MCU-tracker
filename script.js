@@ -1,5 +1,5 @@
-let dependencies = {};
 
+let dependencies = {};
 async function loadMCU() {
   const res = await fetch('https://mcuapi.up.railway.app/api/v1/movies');
   const data = await res.json();
@@ -37,7 +37,6 @@ async function loadMCU() {
 
     container.appendChild(card);
   });
-
   document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
     checkbox.addEventListener('change', () => {
       const id = parseInt(checkbox.getAttribute('data-id'));
