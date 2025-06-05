@@ -1,10 +1,12 @@
+
+let dependencies = {};
 async function loadMCU() {
   const res = await fetch('https://mcuapi.up.railway.app/api/v1/movies');
   const data = await res.json();
   const movies = data.data.sort((a, b) => a.chronology - b.chronology);
 
   const depsRes = await fetch('dependencies.json');
-  const dependencies = await depsRes.json();
+  dependencies = await depsRes.json();
 
   const watched = JSON.parse(localStorage.getItem('watchedMCU') || '[]');
   const container = document.getElementById('movie-list');
@@ -35,7 +37,6 @@ async function loadMCU() {
 
     container.appendChild(card);
   });
-
   document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
     checkbox.addEventListener('change', () => {
       const id = parseInt(checkbox.getAttribute('data-id'));
@@ -46,4 +47,42 @@ async function loadMCU() {
   });
 }
 
-loadMCU();
+function buildTree(title) {
+  const deps = dependencies[title];
+  if (!deps) return '';
+  const items = deps.map(d => `<li>${d}${buildTree(d)}</li>`).join('');
+  return `<ul class="ml-4 list-disc">${items}</ul>`;
+}
+
+function renderDependencyTree() {
+  const container = document.getElementById('dep-tree');
+  container.innerHTML = '';
+  Object.keys(dependencies).forEach(title => {
+    const details = document.createElement('details');
+    details.className = 'mb-4';
+    details.innerHTML = `<summary class="cursor-pointer font-bold">${title}</summary>${buildTree(title)}`;
+    container.appendChild(details);
+  });
+}
+
+function setupTabs() {
+  const tabMovies = document.getElementById('tab-movies');
+  const tabDeps = document.getElementById('tab-deps');
+  const movieList = document.getElementById('movie-list');
+  const depTree = document.getElementById('dep-tree');
+  tabMovies.addEventListener('click', () => {
+    tabMovies.classList.add('border-b-2', 'border-blue-400', 'text-blue-400');
+    tabDeps.classList.remove('border-b-2', 'border-blue-400', 'text-blue-400');
+    movieList.classList.remove('hidden');
+    depTree.classList.add('hidden');
+  });
+  tabDeps.addEventListener('click', () => {
+    tabDeps.classList.add('border-b-2', 'border-blue-400', 'text-blue-400');
+    tabMovies.classList.remove('border-b-2', 'border-blue-400', 'text-blue-400');
+    movieList.classList.add('hidden');
+    depTree.classList.remove('hidden');
+    renderDependencyTree();
+  });
+}
+
+loadMCU().then(setupTabs);
