@@ -1,9 +1,12 @@
-
 let dependencies = {};
+let allMovies = [];
+let movieMap = {};
 async function loadMCU() {
   const res = await fetch('https://mcuapi.up.railway.app/api/v1/movies');
   const data = await res.json();
   const movies = data.data.sort((a, b) => a.chronology - b.chronology);
+  allMovies = movies;
+  movieMap = Object.fromEntries(movies.map(m => [m.title, m]));
 
   const depsRes = await fetch('dependencies.json');
   dependencies = await depsRes.json();
@@ -37,6 +40,7 @@ async function loadMCU() {
 
     container.appendChild(card);
   });
+
   document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
     checkbox.addEventListener('change', () => {
       const id = parseInt(checkbox.getAttribute('data-id'));
@@ -47,22 +51,22 @@ async function loadMCU() {
   });
 }
 
-function buildTree(title) {
-  const deps = dependencies[title];
-  if (!deps) return '';
-  const items = deps.map(d => `<li>${d}${buildTree(d)}</li>`).join('');
-  return `<ul class="ml-4 list-disc">${items}</ul>`;
+function buildTree(title, visited = new Set()) {
+  if (visited.has(title)) return '';
+  visited.add(title);
+  const movie = movieMap[title] || {};
+  const poster = movie.cover_url ? `<img src="${movie.cover_url}" alt="${title}" class="w-16 h-auto rounded shadow mr-2">` : '';
+  const deps = dependencies[title] || [];
+  const children = deps.length
+    ? `<ul class="ml-6 border-l border-gray-600 pl-4">${deps.map(d => buildTree(d, new Set(visited))).join('')}</ul>`
+    : '';
+  return `<li class="mb-4"><div class="flex items-center">${poster}<span>${title}</span></div>${children}</li>`;
 }
 
 function renderDependencyTree() {
   const container = document.getElementById('dep-tree');
-  container.innerHTML = '';
-  Object.keys(dependencies).forEach(title => {
-    const details = document.createElement('details');
-    details.className = 'mb-4';
-    details.innerHTML = `<summary class="cursor-pointer font-bold">${title}</summary>${buildTree(title)}`;
-    container.appendChild(details);
-  });
+  const items = allMovies.map(m => buildTree(m.title)).join('');
+  container.innerHTML = `<ul class="list-none">${items}</ul>`;
 }
 
 function setupTabs() {
