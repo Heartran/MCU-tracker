@@ -1,17 +1,67 @@
-
 let dependencies = {};
+let allMovies = [];
+let movieMap = {};
+let currentSort = 'chronology';
+let currentPhase = 'all';
+let currentSaga = 'all';
+
 async function loadMCU() {
   const res = await fetch('https://mcuapi.up.railway.app/api/v1/movies');
   const data = await res.json();
-  const movies = data.data.sort((a, b) => a.chronology - b.chronology);
+  allMovies = data.data;
+  movieMap = Object.fromEntries(allMovies.map(m => [m.title, m]));
+
+  const phases = [...new Set(allMovies.map(m => m.phase).filter(Boolean))].sort((a, b) => a - b);
+  const sagas = [...new Set(allMovies.map(m => m.saga).filter(Boolean))].sort();
+  const phaseSel = document.getElementById('phase-filter');
+  phases.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p;
+    opt.textContent = `Fase ${p}`;
+    phaseSel.appendChild(opt);
+  });
+  const sagaSel = document.getElementById('saga-filter');
+  sagas.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    sagaSel.appendChild(opt);
+  });
 
   const depsRes = await fetch('dependencies.json');
   dependencies = await depsRes.json();
 
+  renderMovies();
+}
+
+function renderMovies() {
   const watched = JSON.parse(localStorage.getItem('watchedMCU') || '[]');
   const container = document.getElementById('movie-list');
-  container.innerHTML = '';
+  let movies = allMovies.slice();
 
+  if (currentPhase !== 'all') {
+    movies = movies.filter(m => m.phase === parseInt(currentPhase));
+  }
+  if (currentSaga !== 'all') {
+    movies = movies.filter(m => m.saga === currentSaga);
+  }
+
+  movies.sort((a, b) => {
+    switch (currentSort) {
+      case 'release':
+        return new Date(a.release_date) - new Date(b.release_date);
+      case 'phase':
+        return a.phase - b.phase;
+      case 'saga':
+        return a.saga.localeCompare(b.saga);
+      case 'title':
+        return a.title.localeCompare(b.title);
+      default:
+        return a.chronology - b.chronology;
+    }
+  });
+
+  container.innerHTML = '';
   movies.forEach(movie => {
     const isChecked = watched.includes(movie.id);
     const card = document.createElement('div');
@@ -37,32 +87,33 @@ async function loadMCU() {
 
     container.appendChild(card);
   });
+
   document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
+    checkbox.onchange = () => {
       const id = parseInt(checkbox.getAttribute('data-id'));
       const current = new Set(JSON.parse(localStorage.getItem('watchedMCU') || '[]'));
       checkbox.checked ? current.add(id) : current.delete(id);
       localStorage.setItem('watchedMCU', JSON.stringify([...current]));
-    });
+    };
   });
 }
 
-function buildTree(title) {
-  const deps = dependencies[title];
-  if (!deps) return '';
-  const items = deps.map(d => `<li>${d}${buildTree(d)}</li>`).join('');
-  return `<ul class="ml-4 list-disc">${items}</ul>`;
+function buildTree(title, visited = new Set()) {
+  if (visited.has(title)) return '';
+  visited.add(title);
+  const movie = movieMap[title] || {};
+  const poster = movie.cover_url ? `<img src="${movie.cover_url}" alt="${title}" class="w-16 h-auto rounded shadow mr-2">` : '';
+  const deps = dependencies[title] || [];
+  const children = deps.length
+    ? `<ul class="ml-6 border-l border-gray-600 pl-4">${deps.map(d => buildTree(d, new Set(visited))).join('')}</ul>`
+    : '';
+  return `<li class="mb-4"><div class="flex items-center">${poster}<span>${title}</span></div>${children}</li>`;
 }
 
 function renderDependencyTree() {
   const container = document.getElementById('dep-tree');
-  container.innerHTML = '';
-  Object.keys(dependencies).forEach(title => {
-    const details = document.createElement('details');
-    details.className = 'mb-4';
-    details.innerHTML = `<summary class="cursor-pointer font-bold">${title}</summary>${buildTree(title)}`;
-    container.appendChild(details);
-  });
+  const items = allMovies.map(m => buildTree(m.title)).join('');
+  container.innerHTML = `<ul class="list-none">${items}</ul>`;
 }
 
 function setupTabs() {
@@ -85,4 +136,18 @@ function setupTabs() {
   });
 }
 
-loadMCU().then(setupTabs);
+loadMCU().then(() => {
+  setupTabs();
+  document.getElementById('sort-select').addEventListener('change', e => {
+    currentSort = e.target.value;
+    renderMovies();
+  });
+  document.getElementById('phase-filter').addEventListener('change', e => {
+    currentPhase = e.target.value;
+    renderMovies();
+  });
+  document.getElementById('saga-filter').addEventListener('change', e => {
+    currentSaga = e.target.value;
+    renderMovies();
+  });
+});
