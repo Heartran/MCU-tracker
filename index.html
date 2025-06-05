@@ -12,6 +12,27 @@
       <button id="tab-movies" class="py-2 px-4 border-b-2 border-blue-400 text-blue-400">Film</button>
       <button id="tab-deps" class="py-2 px-4 text-gray-400">Dependencies</button>
     </div>
+    <div id="filters" class="flex flex-wrap gap-4 mb-4 text-black">
+      <label>Ordina:
+        <select id="sort-select" class="ml-2 px-1 py-0.5 rounded">
+          <option value="chronology">Cronologia</option>
+          <option value="release">Data di uscita</option>
+          <option value="phase">Fase</option>
+          <option value="saga">Saga</option>
+          <option value="title">Titolo</option>
+        </select>
+      </label>
+      <label>Fase:
+        <select id="phase-filter" class="ml-2 px-1 py-0.5 rounded">
+          <option value="all">Tutte</option>
+        </select>
+      </label>
+      <label>Saga:
+        <select id="saga-filter" class="ml-2 px-1 py-0.5 rounded">
+          <option value="all">Tutte</option>
+        </select>
+      </label>
+    </div>
     <p id="source-note" class="text-sm text-center italic mb-4">Dati ottenuti dall'MCU API di AugustoMarcelo</p>
     <div id="movie-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     <div id="dep-tree" class="hidden"></div>
