@@ -10,6 +10,12 @@ h1 {
   text-align: center;
 }
 
+#source-note {
+  text-align: center;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
 .mcu-item {
   background: #fff;
   border-radius: 6px;
