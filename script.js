@@ -1,20 +1,16 @@
 async function loadMCUData() {
-  // Fetch movie list from the public MCU API
-  const movieRes = await fetch('https://mcuapi.up.railway.app/api/v1/movies');
-  const movieData = await movieRes.json();
-  const movies = movieData.data;
 
-  // Load dependency information from the local JSON file
-  const depRes = await fetch('./data/dependencies.json');
-  const dependencies = await depRes.json();
+  const res = await fetch('./data/mcu.json');
+  const data = await res.json();
+
+  // Sort movies by release date
+  const movies = data.sort((a, b) => new Date(a.release_date) - new Date(b.release_date));
 
   const watched = JSON.parse(localStorage.getItem('watchedMCU')) || [];
   const container = document.getElementById('app');
   container.innerHTML = '';
 
   movies.forEach(movie => {
-    const depsList = dependencies[movie.title] || [];
-
     const div = document.createElement('div');
     div.className = 'mcu-item';
 
@@ -31,8 +27,8 @@ async function loadMCUData() {
     title.textContent = `${movie.title} (${movie.release_date})`;
 
     const deps = document.createElement('p');
-    deps.innerHTML = `<em>Dipendenze:</em> ${depsList.join(', ') || 'Nessuna'}`;
-
+    const list = movie.dependencies && movie.dependencies.length ? movie.dependencies.join(', ') : 'Nessuna';
+    deps.innerHTML = `<em>Dipendenze:</em> ${list}`;
     div.appendChild(checkbox);
     div.appendChild(title);
     div.appendChild(deps);
