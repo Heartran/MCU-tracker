@@ -1,0 +1,28 @@
+body {
+  font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f4f4f4;
+}
+
+h1 {
+  text-align: center;
+}
+
+.mcu-item {
+  background: #fff;
+  border-radius: 6px;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.mcu-item input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.mcu-item strong {
+  display: block;
+  margin-bottom: 5px;
+}
