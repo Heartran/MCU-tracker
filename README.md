@@ -1,6 +1,6 @@
 # MCU Tracker
 
-This is a simple static site for tracking MCU movies. It fetches data from the public MCU API and allows you to mark movies as watched.
+This is a simple static site for tracking MCU movies. It fetches data from the public MCU API and allows you to mark movies as watched. Dependencies between movies are generated automatically based on their chronological order.
 
 ## Local development
 

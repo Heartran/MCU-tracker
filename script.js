@@ -28,8 +28,13 @@ async function loadMCU() {
     sagaSel.appendChild(opt);
   });
 
-  const depsRes = await fetch('dependencies.json');
-  dependencies = await depsRes.json();
+  const sorted = allMovies.slice().sort((a, b) => a.chronology - b.chronology);
+  dependencies = {};
+  sorted.forEach((m, i) => {
+    if (i > 0) {
+      dependencies[m.title] = [sorted[i - 1].title];
+    }
+  });
 
   renderMovies();
 }
