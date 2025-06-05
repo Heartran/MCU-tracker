@@ -1,0 +1,26 @@
+# Windsurf Deploys Configuration (Beta)
+# This is an auto-generated file used to store your app deploy configuration. Do not modify.
+
+# Project configuration
+project:
+  name: mcu-tracker-app
+  framework: static
+  provider: netlify
+  
+# Build settings
+build:
+  command: ""
+  publish: "/"
+  
+# Environment variables
+environment: {}
+
+# Redirects for SPA
+redirects:
+  - from: "/*"
+    to: "/index.html"
+    status: 200
+
+# The ID of the project on the provider's system
+provider_project_id: mcu-tracker-app
+project_id: 0186d9da-dd89-484b-8171-910d5042f81b
