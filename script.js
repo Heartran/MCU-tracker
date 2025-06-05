@@ -1,4 +1,5 @@
 async function loadMCUData() {
+
   const res = await fetch('./data/mcu.json');
   const data = await res.json();
 
@@ -28,7 +29,6 @@ async function loadMCUData() {
     const deps = document.createElement('p');
     const list = movie.dependencies && movie.dependencies.length ? movie.dependencies.join(', ') : 'Nessuna';
     deps.innerHTML = `<em>Dipendenze:</em> ${list}`;
-
     div.appendChild(checkbox);
     div.appendChild(title);
     div.appendChild(deps);
