@@ -1,20 +1,66 @@
 let dependencies = {};
 let allMovies = [];
 let movieMap = {};
+let currentSort = 'chronology';
+let currentPhase = 'all';
+let currentSaga = 'all';
 async function loadMCU() {
   const res = await fetch('https://mcuapi.up.railway.app/api/v1/movies');
   const data = await res.json();
-  const movies = data.data.sort((a, b) => a.chronology - b.chronology);
-  allMovies = movies;
-  movieMap = Object.fromEntries(movies.map(m => [m.title, m]));
+  allMovies = data.data;
+  movieMap = Object.fromEntries(allMovies.map(m => [m.title, m]));
+
+  const phases = [...new Set(allMovies.map(m => m.phase).filter(Boolean))].sort((a, b) => a - b);
+  const sagas = [...new Set(allMovies.map(m => m.saga).filter(Boolean))].sort();
+  const phaseSel = document.getElementById('phase-filter');
+  phases.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p;
+    opt.textContent = `Fase ${p}`;
+    phaseSel.appendChild(opt);
+  });
+  const sagaSel = document.getElementById('saga-filter');
+  sagas.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    sagaSel.appendChild(opt);
+  });
 
   const depsRes = await fetch('dependencies.json');
   dependencies = await depsRes.json();
 
+  renderMovies();
+}
+
+function renderMovies() {
   const watched = JSON.parse(localStorage.getItem('watchedMCU') || '[]');
   const container = document.getElementById('movie-list');
-  container.innerHTML = '';
+  let movies = allMovies.slice();
 
+  if (currentPhase !== 'all') {
+    movies = movies.filter(m => m.phase === parseInt(currentPhase));
+  }
+  if (currentSaga !== 'all') {
+    movies = movies.filter(m => m.saga === currentSaga);
+  }
+
+  movies.sort((a, b) => {
+    switch (currentSort) {
+      case 'release':
+        return new Date(a.release_date) - new Date(b.release_date);
+      case 'phase':
+        return a.phase - b.phase;
+      case 'saga':
+        return a.saga.localeCompare(b.saga);
+      case 'title':
+        return a.title.localeCompare(b.title);
+      default:
+        return a.chronology - b.chronology;
+    }
+  });
+
+  container.innerHTML = '';
   movies.forEach(movie => {
     const isChecked = watched.includes(movie.id);
     const card = document.createElement('div');
@@ -42,12 +88,12 @@ async function loadMCU() {
   });
 
   document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
+    checkbox.onchange = () => {
       const id = parseInt(checkbox.getAttribute('data-id'));
       const current = new Set(JSON.parse(localStorage.getItem('watchedMCU') || '[]'));
       checkbox.checked ? current.add(id) : current.delete(id);
       localStorage.setItem('watchedMCU', JSON.stringify([...current]));
-    });
+    };
   });
 }
 
@@ -89,4 +135,18 @@ function setupTabs() {
   });
 }
 
-loadMCU().then(setupTabs);
+loadMCU().then(() => {
+  setupTabs();
+  document.getElementById('sort-select').addEventListener('change', e => {
+    currentSort = e.target.value;
+    renderMovies();
+  });
+  document.getElementById('phase-filter').addEventListener('change', e => {
+    currentPhase = e.target.value;
+    renderMovies();
+  });
+  document.getElementById('saga-filter').addEventListener('change', e => {
+    currentSaga = e.target.value;
+    renderMovies();
+  });
+});
