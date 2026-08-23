@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- MCU Tracker — arc reactor nei toni Nocturne: il simbolo da cui l'MCU
+       è cominciato, ridotto a tre segni leggibili anche a 16px. -->
+  <defs>
+    <radialGradient id="core" cx="50%" cy="46%" r="60%">
+      <stop offset="0%" stop-color="#e9e5ff"/>
+      <stop offset="45%" stop-color="#b3a7f2"/>
+      <stop offset="100%" stop-color="#6a5cc4"/>
+    </radialGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="#12131f"/>
+  <!-- bobine esterne: anello segmentato -->
+  <circle cx="50" cy="50" r="33" fill="none" stroke="#9184d9" stroke-width="7"
+          stroke-dasharray="14.5 6.23" stroke-dashoffset="4" opacity="0.92"/>
+  <!-- anello interno -->
+  <circle cx="50" cy="50" r="21.5" fill="none" stroke="#6f63b8" stroke-width="3"/>
+  <!-- nucleo triangolare -->
+  <path d="M50 35.5 L63.4 58.8 L36.6 58.8 Z" fill="url(#core)"
+        stroke="#efeaff" stroke-width="2" stroke-linejoin="round"/>
+</svg>

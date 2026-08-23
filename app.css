@@ -270,3 +270,7 @@
   .dd-thumb { width: 72px; }
   .dd-why { display: none; }
 }
+
+/* ── logo ── */
+.nav-brand { display: inline-flex; align-items: center; gap: 9px; }
+.nav-logo { border-radius: 6px; display: block; }
