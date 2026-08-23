@@ -150,6 +150,37 @@ export function heroBackdrop(p) {
   return p.cover.replace('/image/upload/', '/image/upload/w_1200,h_500,c_fill,g_auto,q_auto/');
 }
 
+// ── Verso Doomsday ──
+// La collezione ufficiale Disney+ "Countdown to Avengers: Doomsday"
+// (16 agosto 2026): i 15 titoli che Marvel considera le dipendenze effettive
+// del film. 13 stanno nel dataset (ref = id); X-Men e X2 sono era Fox, fuori
+// dal canone del tracker, e vivono solo qui come voci esterne — id alti che
+// finiscono comunque in watched.json, così anche loro si possono spuntare.
+export const DOOMSDAY = {
+  event: "Avengers: Doomsday",
+  release: "2026-12-18",
+  source: 'Collezione Disney+ "Countdown to Avengers: Doomsday", 16 agosto 2026',
+  items: [
+    { ext: { id: 9001, title: "X-Men", year: 2000, duration: 104, cover: "https://image.tmdb.org/t/p/w500/bRDAc4GogyS9ci3ow7UnInOcriN.jpg", tag: "Universo Fox" },
+      why: "Il punto d'ingresso dei mutanti Fox: i volti che tornano in Doomsday nascono qui." },
+    { ext: { id: 9002, title: "X2", year: 2003, duration: 133, cover: "https://image.tmdb.org/t/p/w500/bst4alFUXCxISwdRUKSMhhkrX1M.jpg", tag: "Universo Fox" },
+      why: "Il capitolo centrale della trilogia mutante originale, con i fili che Doomsday riprende." },
+    { ref: 1,  why: "L'origine di Steve Rogers e Peggy Carter, entrambi attesi al ritorno." },
+    { ref: 7,  why: "La prima riunione: la dinamica di squadra su cui Doomsday costruisce." },
+    { ref: 22, why: "Thanos e lo schiocco: le conseguenze multiversali partono da qui." },
+    { ref: 23, why: "Chiude la Saga dell'Infinito e definisce lo status quo attuale." },
+    { refs: [26, 54], why: "La TVA, le linee temporali, Colui che rimane: il manuale del multiverso (entrambe le stagioni)." },
+    { ref: 27, why: "Shang-Chi è nel cast di Doomsday: la sua storia comincia qui." },
+    { ref: 33, why: "Il multiverso si spalanca: le variant e le porte rimaste aperte." },
+    { ref: 44, why: "Shuri e il Wakanda dopo T'Challa, presenze annunciate nel film." },
+    { ref: 60, why: "Il Captain America di Sam Wilson, centrale nella nuova squadra." },
+    { ref: 36, why: "Deadpool, Wolverine e il confine ormai poroso tra Fox e MCU." },
+    { ref: 42, why: "Le incursioni tra universi di Strange e Wanda: la meccanica del disastro." },
+    { ref: 61, why: "I New Avengers escono da qui ed entrano dritti in Doomsday." },
+    { ref: 62, why: "I Fantastici 4 dell'universo 828: il ponte diretto verso Doomsday." },
+  ],
+};
+
 export function trailerUrl(p) {
   // Il dataset non porta URL dei trailer: una ricerca YouTube sul titolo è
   // il modo più robusto di far funzionare il bottone per tutti i titoli.
