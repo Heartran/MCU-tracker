@@ -191,13 +191,25 @@ function setupTabs() {
 
 function showStaleness(body) {
   const note = document.getElementById('source-note');
-  if (!body.stale) return;
-  const quando = body.fetchedAt
-    ? new Date(body.fetchedAt).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const quando = (iso) => iso
+    ? new Date(iso).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
     : 'data sconosciuta';
-  note.innerHTML = `⚠️ L'MCU API è irraggiungibile in questo momento: stai vedendo l'ultima copia salvata (${quando}).`;
-  note.classList.remove('italic');
-  note.classList.add('text-amber-400', 'font-semibold');
+
+  if (body.source === 'mirror') {
+    // Non è un guasto: lo specchio CDN è la strategia di resilienza
+    // ufficiale del progetto stesso, aggiornata settimanalmente — un
+    // avviso informativo, non un allarme come i dati vecchi della nostra
+    // cache locale.
+    note.innerHTML = `ℹ️ L'MCU API live non risponde: dati dallo specchio CDN ufficiale del progetto (generato il ${quando(body.generatedAt)}).`;
+    note.classList.remove('italic');
+    note.classList.add('text-cyan-400');
+    return;
+  }
+  if (body.stale) {
+    note.innerHTML = `⚠️ MCU API e specchio CDN sono entrambi irraggiungibili in questo momento: stai vedendo l'ultima copia salvata da questo server (${quando(body.fetchedAt)}).`;
+    note.classList.remove('italic');
+    note.classList.add('text-amber-400', 'font-semibold');
+  }
 }
 
 function showLoadError(err) {

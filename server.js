@@ -14,6 +14,12 @@ const PORT = process.env.PORT || 3300;
 const WATCHED_FILE = join(__dirname, "watched.json");
 const MOVIES_CACHE_FILE = join(__dirname, "movies-cache.json");
 const MCU_API_URL = "https://mcuapi.up.railway.app/api/v1/movies";
+// Specchio ufficiale del progetto stesso (README §"Static mirror"): stesso
+// dataset servito da jsDelivr, aggiornato settimanalmente, pensato apposta
+// per restare raggiungibile quando l'API live è giù. Non conta sul rate
+// limit e non richiede che l'API abbia mai risposto neanche una volta.
+const MCU_MIRROR_URL = "https://cdn.jsdelivr.net/gh/AugustoMarcelo/mcuapi@master/data/movies.json";
+const MCU_MIRROR_INDEX_URL = "https://cdn.jsdelivr.net/gh/AugustoMarcelo/mcuapi@master/data/index.json";
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -45,6 +51,21 @@ async function fetchMovies() {
   return json.data;
 }
 
+async function fetchMoviesMirror() {
+  const r = await fetch(MCU_MIRROR_URL, { signal: AbortSignal.timeout(10000) });
+  if (!r.ok) throw new Error(`mirror CDN ha risposto ${r.status}`);
+  const data = await r.json();
+  if (!Array.isArray(data)) throw new Error("mirror CDN: forma della risposta inattesa");
+  // generated_at è un contorno, non il dato stesso: se questa richiesta in
+  // più fallisce non deve far fallire l'intero fallback.
+  let generatedAt = null;
+  try {
+    const idxRes = await fetch(MCU_MIRROR_INDEX_URL, { signal: AbortSignal.timeout(5000) });
+    if (idxRes.ok) generatedAt = (await idxRes.json())?.generated_at ?? null;
+  } catch { /* opzionale */ }
+  return { data, generatedAt };
+}
+
 async function readMoviesCache() {
   if (!existsSync(MOVIES_CACHE_FILE)) return null;
   try {
@@ -55,9 +76,9 @@ async function readMoviesCache() {
   }
 }
 
-async function writeMoviesCache(data) {
+async function writeMoviesCache(data, source) {
   const tmp = MOVIES_CACHE_FILE + ".tmp";
-  await writeFile(tmp, JSON.stringify({ data, fetchedAt: new Date().toISOString() }, null, 2), "utf-8");
+  await writeFile(tmp, JSON.stringify({ data, source, fetchedAt: new Date().toISOString() }, null, 2), "utf-8");
   await rename(tmp, MOVIES_CACHE_FILE);
 }
 
@@ -105,16 +126,31 @@ const server = createServer(async (req, res) => {
   if (req.url === "/health") return sendJson(res, 200, { ok: true });
 
   if (req.url === "/api/movies" && req.method === "GET") {
+    // Catena di fallback: API live (i dati più freschi possibili) → specchio
+    // CDN ufficiale del progetto (settimanale, ma non richiede che l'API
+    // abbia mai risposto) → nostra cache locale dell'ultimo successo →
+    // errore vero solo se non c'è proprio nient'altro a cui appoggiarsi.
     try {
       const data = await fetchMovies();
-      await writeMoviesCache(data);
-      return sendJson(res, 200, { data, stale: false });
-    } catch (e) {
-      const cached = await readMoviesCache();
-      if (cached) {
-        return sendJson(res, 200, { data: cached.data, stale: true, fetchedAt: cached.fetchedAt });
+      await writeMoviesCache(data, "api");
+      return sendJson(res, 200, { data, stale: false, source: "api" });
+    } catch (apiErr) {
+      try {
+        const { data, generatedAt } = await fetchMoviesMirror();
+        await writeMoviesCache(data, "mirror");
+        return sendJson(res, 200, { data, stale: false, source: "mirror", generatedAt });
+      } catch (mirrorErr) {
+        const cached = await readMoviesCache();
+        if (cached) {
+          return sendJson(res, 200, {
+            data: cached.data, stale: true,
+            source: cached.source || "cache", fetchedAt: cached.fetchedAt,
+          });
+        }
+        return sendJson(res, 502, {
+          error: `MCU API (${apiErr.message}) e specchio CDN (${mirrorErr.message}) entrambi irraggiungibili, nessuna copia salvata.`,
+        });
       }
-      return sendJson(res, 502, { error: `MCU API non raggiungibile (${e.message}) e nessuna copia salvata.` });
     }
   }
 
