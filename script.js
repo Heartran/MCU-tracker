@@ -85,8 +85,12 @@ async function loadMCU() {
       dependencies[m.title] = [sorted[i - 1].title];
     }
   });
+}
 
-  renderMovies();
+function updateProgress() {
+  const el = document.getElementById('progress-counter');
+  if (!el || !allMovies.length) return;
+  el.textContent = `Visti ${watchedIds.size}/${allMovies.length}`;
 }
 
 function renderMovies() {
@@ -118,55 +122,75 @@ function renderMovies() {
   container.innerHTML = '';
   movies.forEach(movie => {
     const isChecked = watchedIds.has(movie.id);
-    const card = document.createElement('div');
-    card.className = 'bg-gray-800 rounded-lg shadow p-4 flex flex-col';
+    const card = document.createElement('article');
+    card.className = 'card' + (isChecked ? ' is-watched' : '');
 
+    const num = String(movie.chronology ?? '·').padStart(2, '0');
     const deps = dependencies[movie.title];
-    const depsHTML = deps ? `<p class="text-sm text-yellow-400 mt-2"><strong>🔗 Dipendenze consigliate:</strong> ${deps.join(', ')}</p>` : '';
+    const depsHTML = deps
+      ? `<p class="dep-line"><strong>Prerequisito</strong>${deps.join(', ')}</p>`
+      : '';
 
     card.innerHTML = `
-      <img src="${movie.cover_url}" alt="${movie.title}" class="rounded mb-3 shadow">
-      <h2 class="text-xl font-bold">${movie.title}</h2>
-      <p class="text-sm text-gray-400 mb-2">📅 ${movie.release_date} • ⏱️ ${movie.duration || '?'} min</p>
-      <p class="text-sm text-gray-300 mb-2"><strong>Fase:</strong> ${movie.phase} – <strong>Saga:</strong> ${movie.saga}</p>
-      <p class="text-sm text-gray-400 mb-2"><strong>Regia:</strong> ${movie.directed_by || '?'}</p>
-      <p class="text-sm mb-2">${movie.overview ? movie.overview.substring(0, 150) + '…' : 'Trama non disponibile.'}</p>
-      ${movie.trailer_url ? `<a href="${movie.trailer_url}" target="_blank" class="text-blue-400 underline mb-2">🎬 Guarda Trailer</a>` : ''}
-      ${depsHTML}
-      <label class="flex items-center gap-2 mt-auto">
-        <input type="checkbox" ${isChecked ? 'checked' : ''} class="form-checkbox h-4 w-4 text-green-500" data-id="${movie.id}">
-        <span class="text-sm">Segnato come visto</span>
-      </label>
+      <div class="card-head">
+        <span class="card-num">#${num}</span>
+        <span>Fase ${movie.phase} · ${movie.saga || '?'}</span>
+      </div>
+      <div class="poster-wrap">
+        <img src="${movie.cover_url}" alt="${movie.title}" loading="lazy">
+        <span class="stamp">Visto</span>
+      </div>
+      <div class="card-body">
+        <h2 class="card-title">${movie.title}</h2>
+        <dl class="specs">
+          <div><dt>Uscita</dt><dd>${movie.release_date || '?'}</dd></div>
+          <div><dt>Durata</dt><dd>${movie.duration || '?'} min</dd></div>
+          <div><dt>Regia</dt><dd>${movie.directed_by || '?'}</dd></div>
+        </dl>
+        <p class="overview">${movie.overview ? movie.overview.substring(0, 150) + '…' : 'Trama non disponibile.'}</p>
+        ${depsHTML}
+        <div class="card-actions">
+          ${movie.trailer_url ? `<a href="${movie.trailer_url}" target="_blank" class="btn">Trailer ↗</a>` : ''}
+          <label class="watch-toggle">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} data-id="${movie.id}">
+            <span class="btn"><span class="label-off">Segna visto</span><span class="label-on">Visto ✓</span></span>
+          </label>
+        </div>
+      </div>
     `;
 
     container.appendChild(card);
   });
 
-  document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+  container.querySelectorAll('.watch-toggle input').forEach(checkbox => {
     checkbox.onchange = () => {
       const id = parseInt(checkbox.getAttribute('data-id'));
       checkbox.checked ? watchedIds.add(id) : watchedIds.delete(id);
+      checkbox.closest('.card').classList.toggle('is-watched', checkbox.checked);
+      updateProgress();
       saveWatched();
     };
   });
+
+  updateProgress();
 }
 
 function buildTree(title, visited = new Set()) {
   if (visited.has(title)) return '';
   visited.add(title);
   const movie = movieMap[title] || {};
-  const poster = movie.cover_url ? `<img src="${movie.cover_url}" alt="${title}" class="w-16 h-auto rounded shadow mr-2">` : '';
+  const poster = movie.cover_url ? `<img src="${movie.cover_url}" alt="${title}" loading="lazy">` : '';
   const deps = dependencies[title] || [];
   const children = deps.length
-    ? `<ul class="ml-6 border-l border-gray-600 pl-4">${deps.map(d => buildTree(d, new Set(visited))).join('')}</ul>`
+    ? `<ul class="tree-children">${deps.map(d => buildTree(d, new Set(visited))).join('')}</ul>`
     : '';
-  return `<li class="mb-4"><div class="flex items-center">${poster}<span>${title}</span></div>${children}</li>`;
+  return `<li class="tree-node"><div class="tree-row">${poster}<span class="tree-title">${title}</span></div>${children}</li>`;
 }
 
 function renderDependencyTree() {
   const container = document.getElementById('dep-tree');
   const items = allMovies.map(m => buildTree(m.title)).join('');
-  container.innerHTML = `<ul class="list-none">${items}</ul>`;
+  container.innerHTML = `<ul class="tree-root">${items}</ul>`;
 }
 
 function setupTabs() {
@@ -174,16 +198,19 @@ function setupTabs() {
   const tabDeps = document.getElementById('tab-deps');
   const movieList = document.getElementById('movie-list');
   const depTree = document.getElementById('dep-tree');
+  const filters = document.getElementById('filters');
   tabMovies.addEventListener('click', () => {
-    tabMovies.classList.add('border-b-2', 'border-blue-400', 'text-blue-400');
-    tabDeps.classList.remove('border-b-2', 'border-blue-400', 'text-blue-400');
+    tabMovies.classList.add('is-active');
+    tabDeps.classList.remove('is-active');
     movieList.classList.remove('hidden');
+    filters.classList.remove('hidden');
     depTree.classList.add('hidden');
   });
   tabDeps.addEventListener('click', () => {
-    tabDeps.classList.add('border-b-2', 'border-blue-400', 'text-blue-400');
-    tabMovies.classList.remove('border-b-2', 'border-blue-400', 'text-blue-400');
+    tabDeps.classList.add('is-active');
+    tabMovies.classList.remove('is-active');
     movieList.classList.add('hidden');
+    filters.classList.add('hidden');
     depTree.classList.remove('hidden');
     renderDependencyTree();
   });
@@ -200,28 +227,30 @@ function showStaleness(body) {
     // ufficiale del progetto stesso, aggiornata settimanalmente — un
     // avviso informativo, non un allarme come i dati vecchi della nostra
     // cache locale.
-    note.innerHTML = `ℹ️ L'MCU API live non risponde: dati dallo specchio CDN ufficiale del progetto (generato il ${quando(body.generatedAt)}).`;
-    note.classList.remove('italic');
-    note.classList.add('text-cyan-400');
+    note.textContent = `Avviso — l'MCU API live non risponde: dati dallo specchio CDN ufficiale del progetto (generato il ${quando(body.generatedAt)}).`;
+    note.classList.add('note-info');
     return;
   }
   if (body.stale) {
-    note.innerHTML = `⚠️ MCU API e specchio CDN sono entrambi irraggiungibili in questo momento: stai vedendo l'ultima copia salvata da questo server (${quando(body.fetchedAt)}).`;
-    note.classList.remove('italic');
-    note.classList.add('text-amber-400', 'font-semibold');
+    note.textContent = `Attenzione — MCU API e specchio CDN sono entrambi irraggiungibili in questo momento: stai vedendo l'ultima copia salvata da questo server (${quando(body.fetchedAt)}).`;
+    note.classList.add('note-warn');
   }
 }
 
 function showLoadError(err) {
   document.getElementById('movie-list').innerHTML = `
-    <div class="col-span-full text-center py-16">
-      <p class="text-lg text-red-400 font-semibold mb-2">Impossibile caricare i film.</p>
-      <p class="text-sm text-gray-400">${err.message || err}</p>
-      <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-500">Riprova</button>
+    <div class="error-box">
+      <p class="error-title">Errore</p>
+      <p class="error-msg">Impossibile caricare i film. ${err.message || err}</p>
+      <button onclick="location.reload()" class="btn">Riprova</button>
     </div>`;
 }
 
 Promise.all([loadWatched(), loadMCU()]).then(() => {
+  // renderMovies parte solo quando ANCHE lo stato "visto" è arrivato: se
+  // fosse dentro loadMCU (com'era prima), con un /api/watched lento le
+  // spunte comparirebbero vuote al primo paint.
+  renderMovies();
   setupTabs();
   document.getElementById('sort-select').addEventListener('change', e => {
     currentSort = e.target.value;

@@ -2,41 +2,68 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MCU Tracker</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23d81f26%22/><text x=%2250%22 y=%2272%22 font-size=%2260%22 font-family=%22Arial Black,sans-serif%22 font-weight=%22900%22 fill=%22%23f2efe6%22 text-anchor=%22middle%22>M</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-900 text-white">
-  <div class="max-w-5xl mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-6">📽️ MCU Tracker</h1>
-    <div class="flex gap-4 mb-6 border-b border-gray-700">
-      <button id="tab-movies" class="py-2 px-4 border-b-2 border-blue-400 text-blue-400">Film</button>
-      <button id="tab-deps" class="py-2 px-4 text-gray-400">Dependencies</button>
-    </div>
-    <div id="filters" class="flex flex-wrap gap-4 mb-4 text-black">
-      <label>Ordina:
-        <select id="sort-select" class="ml-2 px-1 py-0.5 rounded">
+<body>
+  <div class="page">
+
+    <header class="masthead">
+      <div class="masthead-strip">
+        <span>Archivio &middot; Marvel Cinematic Universe</span>
+        <span id="progress-counter" class="progress">Visti &ndash;/&ndash;</span>
+      </div>
+      <h1 class="masthead-title">MCU <span class="title-block">Tracker</span></h1>
+      <p class="tagline">Registro di visione &middot; dipendenze cronologiche &middot; nessun algoritmo di raccomandazione</p>
+    </header>
+
+    <nav class="tabs" aria-label="Sezioni">
+      <button id="tab-movies" class="tab is-active" type="button">01 / Archivio</button>
+      <button id="tab-deps" class="tab" type="button">02 / Dipendenze</button>
+    </nav>
+
+    <section id="filters" class="toolbar" aria-label="Filtri">
+      <div class="field">
+        <label for="sort-select">Ordina per</label>
+        <select id="sort-select">
           <option value="chronology">Cronologia</option>
           <option value="release">Data di uscita</option>
           <option value="phase">Fase</option>
           <option value="saga">Saga</option>
           <option value="title">Titolo</option>
         </select>
-      </label>
-      <label>Fase:
-        <select id="phase-filter" class="ml-2 px-1 py-0.5 rounded">
+      </div>
+      <div class="field">
+        <label for="phase-filter">Fase</label>
+        <select id="phase-filter">
           <option value="all">Tutte</option>
         </select>
-      </label>
-      <label>Saga:
-        <select id="saga-filter" class="ml-2 px-1 py-0.5 rounded">
+      </div>
+      <div class="field">
+        <label for="saga-filter">Saga</label>
+        <select id="saga-filter">
           <option value="all">Tutte</option>
         </select>
-      </label>
-    </div>
-    <p id="source-note" class="text-sm text-center italic mb-4">Dati ottenuti dall'MCU API di AugustoMarcelo. Le dipendenze sono calcolate automaticamente dalla cronologia.</p>
-    <div id="movie-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-    <div id="dep-tree" class="hidden"></div>
+      </div>
+    </section>
+
+    <p id="source-note" class="source-note">Dati: MCU API di AugustoMarcelo. Le dipendenze sono calcolate automaticamente dalla cronologia.</p>
+
+    <main>
+      <div id="movie-list" class="movie-grid"></div>
+      <div id="dep-tree" class="dep-tree hidden"></div>
+    </main>
+
+    <footer class="colophon">
+      <span>Fonte dati: MCU API (AugustoMarcelo)</span>
+      <span>Niente framework. Niente gradienti. Solo film.</span>
+    </footer>
+
   </div>
   <script src="script.js"></script>
 </body>
