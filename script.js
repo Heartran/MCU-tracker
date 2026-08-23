@@ -43,10 +43,22 @@ async function saveWatched() {
   }
 }
 
+// L'API pubblica esterna sta giù per giorni, non minuti: /api/movies (lato
+// server, server.js) tiene da parte l'ultima risposta buona e la riserve
+// quando l'API non risponde, marcandola "stale" così l'utente sa che i dati
+// sono vecchi invece di crederli aggiornati. Solo se non esiste NESSUNA
+// copia (mai andato online, o deploy statico senza backend) si arriva a un
+// vero errore, mostrato invece di un crash silenzioso.
 async function loadMCU() {
-  const res = await fetch('https://mcuapi.up.railway.app/api/v1/movies');
-  const data = await res.json();
-  allMovies = data.data;
+  const res = await fetch('/api/movies');
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `richiesta fallita (${res.status})`);
+  }
+  const body = await res.json();
+  allMovies = Array.isArray(body.data) ? body.data : [];
+  if (!allMovies.length) throw new Error('nessun film ricevuto');
+  showStaleness(body);
   movieMap = Object.fromEntries(allMovies.map(m => [m.title, m]));
 
   const phases = [...new Set(allMovies.map(m => m.phase).filter(Boolean))].sort((a, b) => a - b);
@@ -177,6 +189,26 @@ function setupTabs() {
   });
 }
 
+function showStaleness(body) {
+  const note = document.getElementById('source-note');
+  if (!body.stale) return;
+  const quando = body.fetchedAt
+    ? new Date(body.fetchedAt).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : 'data sconosciuta';
+  note.innerHTML = `⚠️ L'MCU API è irraggiungibile in questo momento: stai vedendo l'ultima copia salvata (${quando}).`;
+  note.classList.remove('italic');
+  note.classList.add('text-amber-400', 'font-semibold');
+}
+
+function showLoadError(err) {
+  document.getElementById('movie-list').innerHTML = `
+    <div class="col-span-full text-center py-16">
+      <p class="text-lg text-red-400 font-semibold mb-2">Impossibile caricare i film.</p>
+      <p class="text-sm text-gray-400">${err.message || err}</p>
+      <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-500">Riprova</button>
+    </div>`;
+}
+
 Promise.all([loadWatched(), loadMCU()]).then(() => {
   setupTabs();
   document.getElementById('sort-select').addEventListener('change', e => {
@@ -191,4 +223,4 @@ Promise.all([loadWatched(), loadMCU()]).then(() => {
     currentSaga = e.target.value;
     renderMovies();
   });
-});
+}).catch(showLoadError);

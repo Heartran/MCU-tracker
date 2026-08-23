@@ -1,3 +1,5 @@
 # Stato personale (film segnati come visti): non è codice, resta locale
 watched.json
 watched.json.tmp
+movies-cache.json
+movies-cache.json.tmp

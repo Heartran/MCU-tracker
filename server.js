@@ -12,6 +12,8 @@ import { networkInterfaces } from "os";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3300;
 const WATCHED_FILE = join(__dirname, "watched.json");
+const MOVIES_CACHE_FILE = join(__dirname, "movies-cache.json");
+const MCU_API_URL = "https://mcuapi.up.railway.app/api/v1/movies";
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -30,6 +32,33 @@ function getLanIP() {
     }
   }
   return "–";
+}
+
+// L'API pubblica esterna (non nostra) va giù per giorni, non minuti: senza
+// una copia dell'ultima risposta buona il tracker resta vuoto per tutto quel
+// tempo. Il server fa da proxy e tiene da parte l'ultimo dato utile.
+async function fetchMovies() {
+  const r = await fetch(MCU_API_URL, { signal: AbortSignal.timeout(10000) });
+  if (!r.ok) throw new Error(`upstream ha risposto ${r.status}`);
+  const json = await r.json();
+  if (!Array.isArray(json?.data)) throw new Error("upstream: forma della risposta inattesa");
+  return json.data;
+}
+
+async function readMoviesCache() {
+  if (!existsSync(MOVIES_CACHE_FILE)) return null;
+  try {
+    const raw = JSON.parse(await readFile(MOVIES_CACHE_FILE, "utf-8"));
+    return Array.isArray(raw.data) && raw.fetchedAt ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeMoviesCache(data) {
+  const tmp = MOVIES_CACHE_FILE + ".tmp";
+  await writeFile(tmp, JSON.stringify({ data, fetchedAt: new Date().toISOString() }, null, 2), "utf-8");
+  await rename(tmp, MOVIES_CACHE_FILE);
 }
 
 async function readWatched() {
@@ -74,6 +103,20 @@ function sendJson(res, status, obj) {
 
 const server = createServer(async (req, res) => {
   if (req.url === "/health") return sendJson(res, 200, { ok: true });
+
+  if (req.url === "/api/movies" && req.method === "GET") {
+    try {
+      const data = await fetchMovies();
+      await writeMoviesCache(data);
+      return sendJson(res, 200, { data, stale: false });
+    } catch (e) {
+      const cached = await readMoviesCache();
+      if (cached) {
+        return sendJson(res, 200, { data: cached.data, stale: true, fetchedAt: cached.fetchedAt });
+      }
+      return sendJson(res, 502, { error: `MCU API non raggiungibile (${e.message}) e nessuna copia salvata.` });
+    }
+  }
 
   if (req.url === "/api/watched" && req.method === "GET") {
     return sendJson(res, 200, { ids: await readWatched() });
