@@ -111,6 +111,14 @@ export function nextUnwatched(watched) {
   return byRelease().find(p => !watched.has(p.id)) || null;
 }
 
+// Sfondo orizzontale della hero, derivato dalla locandina: le cover stanno
+// su Cloudinary, che ritaglia on-the-fly via URL. c_fill,g_auto inquadra i
+// volti da solo — nessuna seconda fonte di immagini da mantenere.
+export function heroBackdrop(p) {
+  if (!p.cover || !p.cover.includes('/image/upload/')) return null;
+  return p.cover.replace('/image/upload/', '/image/upload/w_1200,h_500,c_fill,g_auto,q_auto/');
+}
+
 export function trailerUrl(p) {
   // Il dataset non porta URL dei trailer: una ricerca YouTube sul titolo è
   // il modo più robusto di far funzionare il bottone per tutti i titoli.

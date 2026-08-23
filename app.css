@@ -31,6 +31,26 @@
 .hero--detail { padding: 56px 44px; min-height: 0; display: block; }
 .hero-content { max-width: 620px; position: relative; }
 
+/* Artwork del titolo come sfondo della hero. L'immagine sta sotto un velo
+   scuro che sfuma verso sinistra: il testo resta leggibile su qualsiasi
+   locandina, e senza immagine (One-Shot) resta il gradiente di sezione. */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.45;
+}
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, var(--color-bg) 8%, rgba(10, 11, 18, 0.72) 45%, rgba(10, 11, 18, 0.25) 100%);
+}
+/* Il ghost resta in position:absolute (sta a destra per suo conto): qui si
+   alza sopra sfondo e velo solo chi scorre nel flusso normale. */
+.hero > *:not(.hero-bg):not(.hero-scrim):not(.hero-ghost) { position: relative; }
+
 .hero-ghost {
   position: absolute;
   right: 36px;

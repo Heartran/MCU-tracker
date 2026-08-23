@@ -1,4 +1,4 @@
-import { PRODUCTS, ROMAN, loadWatched, saveWatched, fmtDate, fmtDuration, byChronology, nextUnwatched, trailerUrl } from './mcu-data.js';
+import { PRODUCTS, ROMAN, loadWatched, saveWatched, fmtDate, fmtDuration, byChronology, nextUnwatched, trailerUrl, heroBackdrop } from './mcu-data.js';
 
 const ICON_CHECK = '<svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"></path></svg>';
 const ICON_CHECK_SM = ICON_CHECK.replace(/width="14" height="14"/, 'width="10" height="10"');
@@ -34,7 +34,9 @@ function render() {
   document.title = `MCU Tracker — ${p.title}`;
   const seen = watched.has(p.id);
 
+  const bg = heroBackdrop(p);
   document.getElementById('hero').innerHTML = `
+    ${bg ? `<img class="hero-bg" src="${bg}" alt=""><div class="hero-scrim"></div>` : ''}
     <span class="hero-ghost">${ROMAN[p.phase] || p.phase}</span>
     <div class="hero-content">
       <div class="hero-tags">
