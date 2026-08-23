@@ -1,4 +1,5 @@
 import { PRODUCTS, ROMAN, loadWatched, saveWatched, fmtDate, fmtDuration, byChronology, nextUnwatched, trailerUrl, heroBackdrop } from './mcu-data.js';
+import { DEPS } from './mcu-deps.js';
 
 const ICON_CHECK = '<svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"></path></svg>';
 const ICON_CHECK_SM = ICON_CHECK.replace(/width="14" height="14"/, 'width="10" height="10"');
@@ -63,14 +64,69 @@ function render() {
     render();
   };
 
-  const chrono = byChronology();
-  const idx = chrono.findIndex(x => x.id === p.id);
-  const before = chrono.slice(Math.max(0, idx - 3), idx);
-  const after = chrono.slice(idx + 1, idx + 4);
-  document.getElementById('before').innerHTML =
-    before.map(x => neighborCard(x)).join('') || '<p class="text-muted" style="font-size:13px">Niente: si comincia da qui.</p>';
-  document.getElementById('after').innerHTML =
-    after.map(x => neighborCard(x, false)).join('') || '<p class="text-muted" style="font-size:13px">Fine della cronologia.</p>';
+  renderDeps(p);
+}
+
+const byId = Object.fromEntries(PRODUCTS.map(x => [x.id, x]));
+
+// Le dipendenze effettive (mcu-deps.js) quando il titolo è coperto; i vicini
+// cronologici come ripiego dichiarato quando non lo è. "Serve per" è il
+// grafo letto al contrario: chi elenca questo titolo tra i suoi required.
+function renderDeps(p) {
+  const deps = DEPS[p.id];
+  const beforeEl = document.getElementById('before');
+  const extraEl = document.getElementById('before-extra');
+  const afterEl = document.getElementById('after');
+  const src = document.getElementById('deps-source');
+
+  if (!deps) {
+    document.getElementById('before-title').textContent = 'Prima di questo (cronologia)';
+    document.getElementById('after-title').textContent = 'Dopo questo (cronologia)';
+    const chrono = byChronology();
+    const idx = chrono.findIndex(x => x.id === p.id);
+    beforeEl.innerHTML = chrono.slice(Math.max(0, idx - 3), idx).map(x => neighborCard(x)).join('')
+      || '<p class="text-muted" style="font-size:13px">Niente: si comincia da qui.</p>';
+    extraEl.innerHTML = '';
+    afterEl.innerHTML = chrono.slice(idx + 1, idx + 4).map(x => neighborCard(x, false)).join('')
+      || '<p class="text-muted" style="font-size:13px">Fine della cronologia.</p>';
+    src.textContent = 'Dipendenze non ancora catalogate per questo titolo: qui sopra vedi i vicini cronologici.';
+    return;
+  }
+
+  document.getElementById('before-title').textContent = 'Dipendenze effettive';
+  const interni = [];
+  const esterni = [];
+  for (const [cat, badge, label] of [['required', 'req', 'Richiesto'], ['optional', 'opt', 'Utile']]) {
+    for (const d of deps[cat] || []) {
+      if (typeof d === 'number' && byId[d]) interni.push({ p: byId[d], badge, label });
+      else esterni.push({ t: d, label });
+    }
+  }
+  beforeEl.innerHTML = interni.map(({ p: x, badge, label }) => `
+    <a class="rail-item" href="dettaglio.html?id=${x.id}">
+      <div class="tile tile--wide">
+        ${x.cover ? `<img class="tile-cover" src="${x.cover}" alt="" loading="lazy">` : ''}
+        <span class="tile-roman">${ROMAN[x.phase] || x.phase}</span>
+        <span class="dep-badge ${badge} tile-watched">${label}</span>
+      </div>
+      <div class="rail-item-title">${x.title}</div>
+      <div class="text-muted rail-item-meta">${watched.has(x.id) ? 'Visto ✓' : 'Da vedere'} · ${x.duration} min</div>
+    </a>`).join('') || '<p class="text-muted" style="font-size:13px">Nessun prerequisito: parte da zero.</p>';
+
+  const refs = (deps.references || []);
+  extraEl.innerHTML = (esterni.length || refs.length) ? `<div class="dep-ext">
+      ${esterni.map(e => `<span class="chip">${e.label.toLowerCase()}: ${typeof e.t === 'number' ? (byId[e.t]?.title ?? e.t) : e.t}</span>`).join('')}
+      ${refs.map(r => `<span class="chip">rimando: ${typeof r === 'number' ? (byId[r]?.title ?? r) : r}</span>`).join('')}
+    </div>` : '';
+
+  document.getElementById('after-title').textContent = 'Serve per';
+  const sblocca = Object.entries(DEPS)
+    .filter(([, v]) => (v.required || []).includes(p.id))
+    .map(([id]) => byId[parseInt(id)]).filter(Boolean);
+  afterEl.innerHTML = sblocca.map(x => neighborCard(x, false)).join('')
+    || '<p class="text-muted" style="font-size:13px">Nessun titolo lo richiede (per ora).</p>';
+
+  src.textContent = 'Dipendenze dal dataset comunitario di mcuflowchart.app.';
 }
 
 watched = await loadWatched();
