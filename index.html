@@ -3,68 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MCU Tracker</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23d81f26%22/><text x=%2250%22 y=%2272%22 font-size=%2260%22 font-family=%22Arial Black,sans-serif%22 font-weight=%22900%22 fill=%22%23f2efe6%22 text-anchor=%22middle%22>M</text></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <title>MCU Tracker — Libreria</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23161826%22/><text x=%2250%22 y=%2270%22 font-size=%2254%22 font-family=%22Inter,sans-serif%22 font-weight=%22600%22 fill=%22%239184d9%22 text-anchor=%22middle%22>M</text></svg>">
+  <link rel="stylesheet" href="nocturne.css">
+  <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <div class="page">
-
-    <header class="masthead">
-      <div class="masthead-strip">
-        <span>Archivio &middot; Marvel Cinematic Universe</span>
-        <span id="progress-counter" class="progress">Visti &ndash;/&ndash;</span>
-      </div>
-      <h1 class="masthead-title">MCU <span class="title-block">Tracker</span></h1>
-      <p class="tagline">Registro di visione &middot; dipendenze cronologiche &middot; nessun algoritmo di raccomandazione</p>
-    </header>
-
-    <nav class="tabs" aria-label="Sezioni">
-      <button id="tab-movies" class="tab is-active" type="button">01 / Archivio</button>
-      <button id="tab-deps" class="tab" type="button">02 / Dipendenze</button>
+    <nav class="nav">
+      <span class="nav-brand">MCU Tracker</span>
+      <a href="index.html" aria-current="page">
+        <svg width="15" height="15" viewBox="0 0 256 256" fill="currentColor"><path d="M218.83,103.77l-80-75.48a1.14,1.14,0,0,1-.11-.11,16,16,0,0,0-21.53,0l-.11.11L37.17,103.77A16,16,0,0,0,32,115.55V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V160h32v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V115.55A16,16,0,0,0,218.83,103.77ZM208,208H160V160a16,16,0,0,0-16-16H112a16,16,0,0,0-16,16v48H48V115.55l.11-.1L128,40l79.9,75.43.11.1Z"></path></svg>
+        Libreria
+      </a>
+      <a href="percorso.html">
+        <svg width="15" height="15" viewBox="0 0 256 256" fill="currentColor"><path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"></path></svg>
+        Percorso
+      </a>
+      <a href="statistiche.html">
+        <svg width="15" height="15" viewBox="0 0 256 256" fill="currentColor"><path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0v94.37L90.73,98a8,8,0,0,1,10.07-.38l58.81,44.11L218.73,90a8,8,0,1,1,10.54,12l-64,56a8,8,0,0,1-10.07.38L96.39,114.29,40,163.63V200H224A8,8,0,0,1,232,208Z"></path></svg>
+        Statistiche
+      </a>
     </nav>
 
-    <section id="filters" class="toolbar" aria-label="Filtri">
-      <div class="field">
-        <label for="sort-select">Ordina per</label>
-        <select id="sort-select">
-          <option value="chronology">Cronologia</option>
-          <option value="release">Data di uscita</option>
-          <option value="phase">Fase</option>
-          <option value="saga">Saga</option>
-          <option value="title">Titolo</option>
-        </select>
+    <section class="hero" id="hero"></section>
+
+    <h6 class="rail-title">Continua il percorso</h6>
+    <div class="rail" id="up-next"></div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path></svg>
+        <input class="input" id="search" placeholder="Cerca titolo…" autocomplete="off">
       </div>
-      <div class="field">
-        <label for="phase-filter">Fase</label>
-        <select id="phase-filter">
-          <option value="all">Tutte</option>
-        </select>
+      <div class="seg" id="type-seg">
+        <label class="seg-opt"><input type="radio" name="tipo" value="all" checked>Tutti</label>
+        <label class="seg-opt"><input type="radio" name="tipo" value="Film">
+          <svg width="13" height="13" viewBox="0 0 256 256" fill="currentColor"><path d="M251.77,73a8,8,0,0,0-8.21.39L208,97.05V72a16,16,0,0,0-16-16H32A16,16,0,0,0,16,72V184a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V159l35.56,23.71A8,8,0,0,0,256,176V80A8,8,0,0,0,251.77,73ZM192,184H32V72H192V184Zm48-22.95-32-21.33V116.28L240,95Z"></path></svg>
+          Film</label>
+        <label class="seg-opt"><input type="radio" name="tipo" value="Serie">
+          <svg width="13" height="13" viewBox="0 0 256 256" fill="currentColor"><path d="M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8ZM168,224a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,224Z"></path></svg>
+          Serie</label>
+        <label class="seg-opt"><input type="radio" name="tipo" value="One-Shot">One-Shot</label>
       </div>
-      <div class="field">
-        <label for="saga-filter">Saga</label>
-        <select id="saga-filter">
-          <option value="all">Tutte</option>
-        </select>
-      </div>
-    </section>
-
-    <p id="source-note" class="source-note">Dati: MCU API di AugustoMarcelo. Le dipendenze sono calcolate automaticamente dalla cronologia.</p>
-
-    <main>
-      <div id="movie-list" class="movie-grid"></div>
-      <div id="dep-tree" class="dep-tree hidden"></div>
-    </main>
-
-    <footer class="colophon">
-      <span>Fonte dati: MCU API (AugustoMarcelo)</span>
-      <span>Niente framework. Niente gradienti. Solo film.</span>
-    </footer>
-
+      <select class="input" id="phase-filter"><option value="all">Tutte le fasi</option></select>
+      <select class="input" id="saga-filter"><option value="all">Tutte le saghe</option></select>
+      <select class="input sort-select" id="sort-select">
+        <option value="release">Data di uscita</option>
+        <option value="chronology">Cronologia MCU</option>
+        <option value="phase">Fase</option>
+        <option value="title">Titolo</option>
+      </select>
+      <label class="seg"><span class="seg-opt"><input type="checkbox" id="hide-watched">Nascondi visti</span></label>
+    </div>
+    <p class="text-muted count-line" id="count-line"></p>
+    <div class="grid" id="grid"></div>
   </div>
-  <script src="script.js"></script>
+  <script type="module" src="home.js"></script>
 </body>
 </html>
