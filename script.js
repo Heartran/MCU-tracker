@@ -5,6 +5,44 @@ let currentSort = 'chronology';
 let currentPhase = 'all';
 let currentSaga = 'all';
 
+// ── stato "visto" ──
+// Il server (server.js, /api/watched) lo condivide fra dispositivi. In un
+// deploy statico puro (Netlify, come da README) l'endpoint non esiste:
+// si scivola sul localStorage del browser, che è quello che c'era prima.
+let watchedIds = new Set();
+let watchedBackend = false;
+
+async function loadWatched() {
+  try {
+    const r = await fetch('/api/watched');
+    if (!r.ok) throw 0;
+    const j = await r.json();
+    watchedIds = new Set(Array.isArray(j.ids) ? j.ids : []);
+    watchedBackend = true;
+  } catch {
+    watchedIds = new Set(JSON.parse(localStorage.getItem('watchedMCU') || '[]'));
+    watchedBackend = false;
+  }
+}
+async function saveWatched() {
+  const ids = [...watchedIds];
+  if (!watchedBackend) {
+    localStorage.setItem('watchedMCU', JSON.stringify(ids));
+    return;
+  }
+  try {
+    const r = await fetch('/api/watched', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+    });
+    if (!r.ok) throw 0;
+  } catch {
+    // Il server c'era al caricamento e ora non risponde più: non perdere la
+    // spunta, tienila almeno su questo dispositivo.
+    localStorage.setItem('watchedMCU', JSON.stringify(ids));
+  }
+}
+
 async function loadMCU() {
   const res = await fetch('https://mcuapi.up.railway.app/api/v1/movies');
   const data = await res.json();
@@ -40,7 +78,6 @@ async function loadMCU() {
 }
 
 function renderMovies() {
-  const watched = JSON.parse(localStorage.getItem('watchedMCU') || '[]');
   const container = document.getElementById('movie-list');
   let movies = allMovies.slice();
 
@@ -68,7 +105,7 @@ function renderMovies() {
 
   container.innerHTML = '';
   movies.forEach(movie => {
-    const isChecked = watched.includes(movie.id);
+    const isChecked = watchedIds.has(movie.id);
     const card = document.createElement('div');
     card.className = 'bg-gray-800 rounded-lg shadow p-4 flex flex-col';
 
@@ -96,9 +133,8 @@ function renderMovies() {
   document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
     checkbox.onchange = () => {
       const id = parseInt(checkbox.getAttribute('data-id'));
-      const current = new Set(JSON.parse(localStorage.getItem('watchedMCU') || '[]'));
-      checkbox.checked ? current.add(id) : current.delete(id);
-      localStorage.setItem('watchedMCU', JSON.stringify([...current]));
+      checkbox.checked ? watchedIds.add(id) : watchedIds.delete(id);
+      saveWatched();
     };
   });
 }
@@ -141,7 +177,7 @@ function setupTabs() {
   });
 }
 
-loadMCU().then(() => {
+Promise.all([loadWatched(), loadMCU()]).then(() => {
   setupTabs();
   document.getElementById('sort-select').addEventListener('change', e => {
     currentSort = e.target.value;
