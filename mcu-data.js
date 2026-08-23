@@ -8,7 +8,7 @@ export const PRODUCTS = [
   {id:1, cover:"https://res.cloudinary.com/augustomarcelo/image/upload/v1675207074/mcuapi/gallery/Movies/captain_america_the_first_avenger/posters/1.jpg", title:"Captain America: Il primo Vendicatore", type:"Film", phase:1, saga:"Saga dell'Infinito", release:"2011-07-22", duration:124, chronology:1, director:"Joe Johnston", overview:"Steve Rogers diventa il supersoldato americano durante la Seconda guerra mondiale."},
   {id:2, cover:"https://res.cloudinary.com/augustomarcelo/image/upload/v1675211712/mcuapi/gallery/Movies/captain_marvel/posters/1.jpg", title:"Captain Marvel", type:"Film", phase:3, saga:"Saga dell'Infinito", release:"2019-03-06", duration:124, chronology:2, director:"Anna Boden, Ryan Fleck", overview:"Carol Danvers scopre le sue origini tra Kree e Skrull negli anni '90."},
   {id:3, cover:"https://res.cloudinary.com/augustomarcelo/image/upload/v1675206317/mcuapi/gallery/Movies/iron_man/posters/1.jpg", title:"Iron Man", type:"Film", phase:1, saga:"Saga dell'Infinito", release:"2008-04-30", duration:126, chronology:3, director:"Jon Favreau", overview:"Tony Stark costruisce un'armatura per fuggire dalla prigionia e diventa Iron Man."},
-  {id:4, cover:"https://res.cloudinary.com/augustomarcelo/image/upload/v1675206796/mcuapi/gallery/Movies/iron_man_2/posters/1.jpg", title:"Iron Man 2", type:"Film", phase:1, saga:"Saga dell'Infinito", release:"2010-04-28", duration:125, chronology:4, director:"Jon Favreau", overview:"Stark affronta Whiplash e il governo che rivuole la sua tecnologia."},
+  {id:4, cover:"https://res.cloudinary.com/augustomarcelo/image/upload/v1675206796/mcuapi/gallery/Movies/iron_man_2/posters/1.jpg", backdrop:"https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/b867b0c0-ee83-40b5-a331-00b77105c01a/compose?format=webp", title:"Iron Man 2", type:"Film", phase:1, saga:"Saga dell'Infinito", release:"2010-04-28", duration:125, chronology:4, director:"Jon Favreau", overview:"Stark affronta Whiplash e il governo che rivuole la sua tecnologia."},
   {id:5, cover:"https://res.cloudinary.com/augustomarcelo/image/upload/v1675206567/mcuapi/gallery/Movies/the_incredible_hulk/posters/1.jpg", title:"L'incredibile Hulk", type:"Film", phase:1, saga:"Saga dell'Infinito", release:"2008-06-12", duration:112, chronology:5, director:"Louis Leterrier", overview:"Bruce Banner in fuga cerca una cura mentre nasce Abominio."},
   {id:6, cover:"https://res.cloudinary.com/augustomarcelo/image/upload/v1675206905/mcuapi/gallery/Movies/thor/posters/1.jpg", title:"Thor", type:"Film", phase:1, saga:"Saga dell'Infinito", release:"2011-04-27", duration:115, chronology:6, director:"Kenneth Branagh", overview:"Il dio del tuono viene esiliato sulla Terra e impara l'umiltà."},
   {id:7, cover:"https://res.cloudinary.com/augustomarcelo/image/upload/v1675207189/mcuapi/gallery/Movies/the_avengers/posters/1.jpg", title:"The Avengers", type:"Film", phase:1, saga:"Saga dell'Infinito", release:"2012-04-25", duration:143, chronology:7, director:"Joss Whedon", overview:"I primi Vendicatori si uniscono contro Loki e i Chitauri a New York."},
@@ -146,6 +146,9 @@ export function nextUnwatched(watched) {
 // su Cloudinary, che ritaglia on-the-fly via URL. c_fill,g_auto inquadra i
 // volti da solo — nessuna seconda fonte di immagini da mantenere.
 export function heroBackdrop(p) {
+  // Artwork orizzontale ufficiale (Disney+) quando disponibile; altrimenti
+  // il ritaglio intelligente della locandina via Cloudinary.
+  if (p.backdrop) return p.backdrop;
   if (!p.cover || !p.cover.includes('/image/upload/')) return null;
   return p.cover.replace('/image/upload/', '/image/upload/w_1200,h_500,c_fill,g_auto,q_auto/');
 }
