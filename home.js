@@ -53,6 +53,7 @@ function renderUpNext() {
   rail.innerHTML = unwatched.slice(1, 11).map((p, i) => `
     <a class="rail-item" href="dettaglio.html?id=${p.id}">
       <div class="tile">
+        ${p.cover ? `<img class="tile-cover" src="${p.cover}" alt="" loading="lazy">` : ''}
         <span class="tile-roman">${ROMAN[p.phase] || p.phase}</span>
         <span class="tile-n">${String(i + 2).padStart(2, '0')}</span>
       </div>
@@ -88,6 +89,7 @@ function renderGrid() {
     <article>
       <a class="tile-link" href="dettaglio.html?id=${p.id}">
         <div class="tile" style="opacity:${seen ? '0.55' : '1'}">
+          ${p.cover ? `<img class="tile-cover" src="${p.cover}" alt="" loading="lazy">` : ''}
           <span class="tile-roman">${ROMAN[p.phase] || p.phase}</span>
           ${seen ? `<span class="tag tag-accent tile-watched">${ICON_CHECK_SM} Visto</span>` : ''}
         </div>

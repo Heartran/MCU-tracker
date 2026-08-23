@@ -20,6 +20,7 @@ function neighborCard(p, showState = true) {
   return `
     <a class="rail-item" href="dettaglio.html?id=${p.id}">
       <div class="tile tile--wide">
+        ${p.cover ? `<img class="tile-cover" src="${p.cover}" alt="" loading="lazy">` : ''}
         <span class="tile-roman">${ROMAN[p.phase] || p.phase}</span>
         ${showState && seen ? `<span class="tag tag-accent tile-watched">${ICON_CHECK_SM} Visto</span>` : ''}
       </div>

@@ -94,6 +94,10 @@
   position: relative;
   overflow: hidden;
 }
+/* Locandina vera quando c'è; il numero romano resta come fallback per i tre
+   One-Shot minori che il dataset mcuapi non cataloga (nessuna cover). */
+.tile-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.tile-cover ~ .tile-roman { display: none; }
 .tile--wide { aspect-ratio: 16 / 9; }
 .tile-roman { font-size: 56px; color: var(--color-neutral-800); font-family: var(--font-heading); }
 .tile--wide .tile-roman { font-size: 44px; }
